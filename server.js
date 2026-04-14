@@ -42,19 +42,21 @@ app.use(helmet());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// ─────────────────────────────────────────
+// CONFIGURACIÓN DE SESIÓN (CORREGIDA)
+// ─────────────────────────────────────────
 app.use(session({
     name: 'cloudgram.sid',
     secret: process.env.SESSION_SECRET,
-    resave: true, // Cámbialo a true para forzar el guardado
-    saveUninitialized: true, // Cámbialo a true
+    resave: true,
+    saveUninitialized: true,
     proxy: true,
     cookie: {
         httpOnly: true,
         secure: true, 
-        sameSite: 'none', // Cambia 'lax' por 'none' para mayor compatibilidad en proxys de Render
+        sameSite: 'none',
         maxAge: 8 * 60 * 60 * 1000
     }
-}));
 }));
 
 // ─────────────────────────────────────────
