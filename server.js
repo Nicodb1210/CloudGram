@@ -17,16 +17,16 @@ if (missing.length) {
 const app = express();
 app.set('trust proxy', 1);
 
-// SEGURIDAD
+// SEGURIDAD REFORZADA PERO PERMISIVA
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         "default-src": ["'self'"],
-        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Añadido unsafe-eval por si acaso
-        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Permite fuentes
-        "font-src": ["'self'", "https://fonts.gstatic.com"], // Permite las fuentes reales
-        "img-src": ["'self'", "data:", "https:"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        "font-src": ["'self'", "https://fonts.gstatic.com"],
+        "img-src": ["'self'", "data:", "https:", "https://api.telegram.org"],
         "connect-src": ["'self'"],
       },
     },
@@ -69,13 +69,13 @@ function saveDB(data) {
     fs.writeFileSync(DB, JSON.stringify(data, null, 2));
 }
 
-// EL MIDDLEWARE (SOLO UNA VEZ)
 const auth = (req, res, next) => {
     if (req.session && req.session.user) return next();
     res.status(401).json({ error: 'No autorizado' });
 };
 
-// API
+// --- API ---
+
 app.get('/api/session', (req, res) => {
     const isLogged = !!(req.session && req.session.user);
     res.json({ logged: isLogged, user: isLogged ? req.session.user : null });
@@ -98,28 +98,60 @@ app.get('/api/files', auth, (req, res) => {
     res.json(getDB());
 });
 
+// RUTA DE SUBIDA CORREGIDA
 app.post('/api/upload', auth, upload.single('archivo'), async (req, res) => {
     if (!req.file) return res.status(400).send('No file');
     try {
         const msg = await bot.api.sendDocument(process.env.CHAT_ID, new InputFile(req.file.path, req.file.originalname));
         const db = getDB();
+        const ext = path.extname(req.file.originalname).toLowerCase().replace('.', '');
+        
         db.push({
             id: Date.now(),
             nombre: req.file.originalname,
             carpeta: (req.body.carpeta || 'General'),
             file_id: msg.document.file_id,
-            size: req.file.size,
+            size: (req.file.size / (1024 * 1024)).toFixed(2), // Tamaño en MB para el HTML
+            tipo: ext || 'file', // Extensión necesaria para los iconos
             fecha: new Date().toISOString()
         });
         saveDB(db);
         res.json({ success: true });
-    } catch (e) { res.status(500).send('Error'); }
+    } catch (e) { 
+        console.error(e);
+        res.status(500).send('Error al enviar a Telegram'); 
+    }
     finally { if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); }
+});
+
+// NUEVA RUTA: BORRAR ARCHIVO
+app.delete('/api/delete/:id', auth, (req, res) => {
+    let db = getDB();
+    db = db.filter(f => f.id != req.params.id);
+    saveDB(db);
+    res.json({ success: true });
+});
+
+// NUEVA RUTA: DESCARGAR ARCHIVO
+app.get('/api/download/:file_id', auth, async (req, res) => {
+    try {
+        const file = await bot.api.getFile(req.params.file_id);
+        const url = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`;
+        res.json({ url });
+    } catch (e) { res.status(500).json({ error: 'No se pudo obtener el link' }); }
+});
+
+// NUEVA RUTA: VISTA PREVIA
+app.get('/api/preview/:file_id', auth, async (req, res) => {
+    try {
+        const file = await bot.api.getFile(req.params.file_id);
+        res.redirect(`https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`);
+    } catch (e) { res.status(404).send('No disponible'); }
 });
 
 // STATIC & FALLBACK
 app.use(express.static(PUBLIC));
-app.use((req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
+app.get('*', (req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));
