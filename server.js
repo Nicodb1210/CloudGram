@@ -225,7 +225,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', uptime: process.uptime().toFixed(0) + 's' });
 });
 
-app.get('*', (req, res) => {
+app.get('(.*)', (req, res) => { 
     const index = path.join(PUBLIC, 'index.html');
     if (fs.existsSync(index)) return res.sendFile(index);
     res.status(404).send('Not found');
