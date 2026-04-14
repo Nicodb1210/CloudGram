@@ -334,9 +334,8 @@ function fsize(mb){if(mb===undefined||mb===null||mb==="")return"—";const n=par
 function fdate(ts){if(!ts)return"";return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"});}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
-/* LOGIN (CORREGIDO) */
+/* LOGIN */
 async function doLogin(){
-  // Obtenemos los valores de los inputs por sus IDs actuales
   const u = document.getElementById("lu").value.trim();
   const p = document.getElementById("lp").value;
   const b = document.getElementById("lbtn");
@@ -344,7 +343,7 @@ async function doLogin(){
   
   if(!u || !p) return;
   
-  b.disabled = true; 
+  b.disabled = true;
   b.innerHTML = '<span class="spinner"></span>';
   e.style.display = "none";
 
@@ -352,7 +351,7 @@ async function doLogin(){
     const r = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // ENVIAMOS LOS CAMPOS QUE EL SERVIDOR ESPERA: 'user' y 'password'
+      credentials: "same-origin",
       body: JSON.stringify({ user: u, password: p })
     });
 
@@ -366,9 +365,9 @@ async function doLogin(){
       document.getElementById("uav").textContent = u[0].toUpperCase();
       loadFiles();
     } else {
-      e.style.display = "block"; 
+      e.style.display = "block";
       e.textContent = "Usuario o contraseña incorrectos";
-      b.disabled = false; 
+      b.disabled = false;
       b.innerHTML = "Iniciar sesión";
     }
   } catch (err) {
@@ -380,7 +379,7 @@ async function doLogin(){
 
 async function doLogout(){
   try{
-    const r=await fetch("/api/logout",{method:"POST"});
+    const r=await fetch("/api/logout",{method:"POST",credentials:"same-origin"});
     if(r.ok) location.reload();
   }catch{location.reload();}
 }
@@ -388,7 +387,7 @@ async function doLogout(){
 /* FILES DATA */
 async function loadFiles(){
   try{
-    const r=await fetch("/api/files");
+    const r=await fetch("/api/files",{credentials:"same-origin"});
     if(r.ok){ files=await r.json(); updateStats(); render(); }
     else if(r.status===401) location.reload();
   }catch(err){toast("Error al cargar archivos","error");}
@@ -418,14 +417,12 @@ function render(){
     return matchSearch && inPath && matchType;
   });
 
-  // Sort
   filtered.sort((a,b)=>{
     if(sortBy==="name") return a.nombre.localeCompare(b.nombre);
     if(sortBy==="date") return new Date(b.fecha)-new Date(a.fecha);
     if(sortBy==="size") return parseFloat(b.size)-parseFloat(a.size);
   });
 
-  // Folders in root if searching/in path
   let folderList=[];
   if(curPath==="" && !typeFilter){
     let fset=new Set();
@@ -525,6 +522,7 @@ async function doUpload(){
 
   const xhr=new XMLHttpRequest();
   xhr.open("POST","/api/upload");
+  xhr.withCredentials = true;
   xhr.upload.onprogress=e=>{ if(e.lengthComputable)bar.style.width=(e.loaded/e.total*100)+"%"; };
   xhr.onload=()=>{
     btn.disabled=false; btn.innerHTML="<span>⬆</span> Subir";
@@ -538,7 +536,7 @@ async function doUpload(){
 
 async function doDl(id,name){
   try{
-    const r=await fetch("/api/download/"+id);
+    const r=await fetch("/api/download/"+id,{credentials:"same-origin"});
     const d=await r.json();
     if(d.url){
       const a=document.createElement("a"); a.href=d.url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
@@ -558,7 +556,7 @@ async function doDel(id){
   const btn=document.getElementById("delbtn");
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span>';
   try{
-    const r=await fetch("/api/delete/"+id,{method:"DELETE"});
+    const r=await fetch("/api/delete/"+id,{method:"DELETE",credentials:"same-origin"});
     if(r.ok){ toast("Archivo eliminado","success"); closeDel(); loadFiles(); }
     else toast("No se pudo eliminar","error");
   }catch(err){toast("Error de red","error");}
@@ -581,7 +579,7 @@ async function openPrev(id){
   const ext=f.tipo.toLowerCase();
   if(isImg(ext)||isVid(ext)||isAud(ext)||isPdf(ext)||isTxt(ext)){
     try{
-      const r=await fetch("/api/preview/"+f.file_id);
+      const r=await fetch("/api/preview/"+f.file_id,{credentials:"same-origin"});
       if(r.ok){
         dlBtn.style.display="block";
         const url=r.url;
@@ -615,7 +613,7 @@ function doDlCurrent(){ if(prevFile) doDl(prevFile.file_id, prevFile.nombre); }
 /* SESSION CHECK */
 (async()=>{
   try{
-    const r=await fetch("/api/session");
+    const r=await fetch("/api/session",{credentials:"same-origin"});
     const d=await r.json();
     if(d.logged){
       document.getElementById("login").style.display="none";
