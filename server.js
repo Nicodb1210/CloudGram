@@ -21,7 +21,7 @@ const bot = new Bot(process.env.TELEGRAM_TOKEN);
 
 const DB      = path.join(__dirname, 'db.json');
 const UPLOADS = path.join(__dirname, 'uploads');
-const PUBLIC  = path.join(__dirname, 'public');
+const PUBLIC = __dirname;
 
 if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
 if (!fs.existsSync(PUBLIC))  fs.mkdirSync(PUBLIC,  { recursive: true });
@@ -225,7 +225,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', uptime: process.uptime().toFixed(0) + 's' });
 });
 
-app.get('/{*path}', (req, res) => {
+app.get('*', (req, res) => {
     const index = path.join(PUBLIC, 'index.html');
     if (fs.existsSync(index)) return res.sendFile(index);
     res.status(404).send('Not found');
