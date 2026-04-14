@@ -223,7 +223,7 @@ input::placeholder{color:var(--muted);}
   <div class="fwrap"><span class="ficon">👤</span><input type="text" id="lu" placeholder="Introduce tu usuario" autocomplete="username"></div>
   <div class="flabel">Contraseña</div>
   <div class="fwrap"><span class="ficon">🔒</span><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password"></div>
-  <button class="btn-primary" id="lbtn" onclick="doLogin()">Iniciar sesión</button>
+  <button class="btn-primary" id="lbtn">Iniciar sesión</button>
   <div class="lerr" id="lerr"></div>
 </div>
 </div>
@@ -628,7 +628,7 @@ function doDlCurrent(){ if(prevFile) doDl(prevFile.file_id, prevFile.nombre); }
   }catch(e){}
 })();
 
-document.getElementById("prev-overlay").onclick=e=>{if(e.target.id==="prev-overlay")closePrev();};
+document.getElementById('lbtn').addEventListener('click', doLogin);
 </script>
 </body>
 </html>
