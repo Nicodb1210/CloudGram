@@ -18,17 +18,20 @@ const app = express();
 app.set('trust proxy', 1);
 
 // SEGURIDAD
-app.use(helmet({
+app.use(
+  helmet({
     contentSecurityPolicy: {
-        directives: {
-            "default-src": ["'self'"],
-            "script-src": ["'self'", "'unsafe-inline'"],
-            "style-src": ["'self'", "'unsafe-inline'"],
-            "img-src": ["'self'", "data:", "https:"],
-            "connect-src": ["'self'"]
-        }
-    }
-}));
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Añadido unsafe-eval por si acaso
+        "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Permite fuentes
+        "font-src": ["'self'", "https://fonts.gstatic.com"], // Permite las fuentes reales
+        "img-src": ["'self'", "data:", "https:"],
+        "connect-src": ["'self'"],
+      },
+    },
+  })
+);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
