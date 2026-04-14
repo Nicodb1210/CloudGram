@@ -223,7 +223,7 @@ input::placeholder{color:var(--muted);}
   <div class="fwrap"><span class="ficon">👤</span><input type="text" id="lu" placeholder="Introduce tu usuario" autocomplete="username"></div>
   <div class="flabel">Contraseña</div>
   <div class="fwrap"><span class="ficon">🔒</span><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password"></div>
-  <button class="btn-up" id="upbtn"><span>⬆</span> Subir</button>
+  <button class="btn-primary" id="lbtn">Iniciar sesión</button>
   <div class="lerr" id="lerr"></div>
 </div>
 </div>
@@ -330,7 +330,7 @@ function isVid(t){return["mp4","mov","webm"].includes(t);}
 function isAud(t){return["mp3","ogg","wav","m4a"].includes(t);}
 function isPdf(t){return t==="pdf";}
 function isTxt(t){return["txt","md","json","js","ts","py","html","css","sh","csv"].includes(t);}
-function fsize(mb){if(!mb)return"—";const n=parseFloat(mb);if(n>=1024)return(n/1024).toFixed(1)+" GB";if(n>=1)return n.toFixed(1)+" MB";return(n*1024).toFixed(0)+" KB";}
+function fsize(mb){if(mb===undefined||mb===null||mb==="")return"—";const n=parseFloat(mb);if(isNaN(n))return"—";if(n>=1024)return(n/1024).toFixed(1)+" GB";if(n>=1)return n.toFixed(1)+" MB";return(n*1024).toFixed(0)+" KB";}
 function fdate(ts){if(!ts)return"";return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"});}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
@@ -362,6 +362,8 @@ async function doLogin(){
         document.getElementById("login").style.display = "none";
         document.getElementById("app").style.display = "block";
       }, 500);
+      document.getElementById("udsp").textContent = u;
+      document.getElementById("uav").textContent = u[0].toUpperCase();
       loadFiles();
     } else {
       e.style.display = "block"; 
@@ -588,8 +590,7 @@ async function openPrev(id){
         else if(isAud(ext)) content.innerHTML=`<div style="background:var(--card);padding:40px;border-radius:20px;border:1px solid var(--border);"><div style="font-size:50px;margin-bottom:20px;text-align:center;">🎵</div><audio src="${url}" controls autoplay></audio></div>`;
         else if(isPdf(ext)) content.innerHTML=`<iframe src="${url}" style="width:85vw;height:75vh;border:none;border-radius:12px;background:#fff;"></iframe>`;
         else if(isTxt(ext)){
-          const txt=await fetch(url).then(x=>x.text());
-          content.innerHTML=`<div style="width:85vw;height:75vh;background:#1e1e26;color:#d4d4d4;padding:25px;border-radius:12px;overflow:auto;font-family:monospace;font-size:13px;white-space:pre-wrap;text-align:left;border:1px solid var(--border);">${esc(txt)}</div>`;
+          content.innerHTML=`<iframe src="/api/preview/${f.file_id}" style="width:85vw;height:75vh;border:none;border-radius:12px;background:#fff;"></iframe>`;
         }
       }else showNoPreview(f,content);
     }catch(e){showNoPreview(f,content);}
