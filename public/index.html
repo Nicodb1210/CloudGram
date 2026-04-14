@@ -334,23 +334,46 @@ function fsize(mb){if(!mb)return"—";const n=parseFloat(mb);if(n>=1024)return(n
 function fdate(ts){if(!ts)return"";return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"});}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
-/* LOGIN */
+/* LOGIN (CORREGIDO) */
 async function doLogin(){
-  const u=document.getElementById("lu").value.trim(), p=document.getElementById("lp").value;
-  const b=document.getElementById("lbtn"), e=document.getElementById("lerr");
-  if(!u||!p) return;
-  b.disabled=true; b.innerHTML='<span class="spinner"></span>';
-  try{
-    const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user:u,password:p})});
-    if(r.ok){
+  // Obtenemos los valores de los inputs por sus IDs actuales
+  const u = document.getElementById("lu").value.trim();
+  const p = document.getElementById("lp").value;
+  const b = document.getElementById("lbtn");
+  const e = document.getElementById("lerr");
+  
+  if(!u || !p) return;
+  
+  b.disabled = true; 
+  b.innerHTML = '<span class="spinner"></span>';
+  e.style.display = "none";
+
+  try {
+    const r = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // ENVIAMOS LOS CAMPOS QUE EL SERVIDOR ESPERA: 'user' y 'password'
+      body: JSON.stringify({ user: u, password: p })
+    });
+
+    if (r.ok) {
       document.getElementById("login").classList.add("out");
-      setTimeout(()=>{document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";},500);
+      setTimeout(() => {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("app").style.display = "block";
+      }, 500);
       loadFiles();
-    }else{
-      e.style.display="block"; e.textContent="Credenciales incorrectas";
-      b.disabled=false; b.innerHTML="Iniciar sesión";
+    } else {
+      e.style.display = "block"; 
+      e.textContent = "Usuario o contraseña incorrectos";
+      b.disabled = false; 
+      b.innerHTML = "Iniciar sesión";
     }
-  }catch(err){toast("Error de conexión","error");b.disabled=false;b.innerHTML="Iniciar sesión";}
+  } catch (err) {
+    toast("Error de conexión con el servidor", "error");
+    b.disabled = false;
+    b.innerHTML = "Iniciar sesión";
+  }
 }
 
 async function doLogout(){
