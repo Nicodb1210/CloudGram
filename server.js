@@ -149,9 +149,11 @@ app.get('/api/preview/:file_id', auth, async (req, res) => {
     } catch (e) { res.status(404).send('No disponible'); }
 });
 
-// STATIC & FALLBACK
+// ... el resto del código arriba igual ...
+
+// STATIC & FALLBACK (CORREGIDO PARA NODE v22)
 app.use(express.static(PUBLIC));
-app.get('*', (req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
+app.get('(.*)', (req, res) => res.sendFile(path.join(PUBLIC, 'index.html')));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));
