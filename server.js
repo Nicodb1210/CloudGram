@@ -4,172 +4,223 @@ const session  = require('express-session');
 const multer   = require('multer');
 const fs       = require('fs');
 const path     = require('path');
+const helmet   = require('helmet');
 const { Bot, InputFile } = require('grammy');
 
 // ─────────────────────────────────────────
-//  Validate required env vars on startup
+// VALIDACIÓN ENV
 // ─────────────────────────────────────────
 const REQUIRED = ['TELEGRAM_TOKEN', 'CHAT_ID', 'APP_USER', 'APP_PASSWORD', 'SESSION_SECRET'];
 const missing  = REQUIRED.filter(k => !process.env[k]);
+
 if (missing.length) {
-    console.error(`[CloudGram] Missing env vars: ${missing.join(', ')}`);
+    console.error(`❌ Missing env vars: ${missing.join(', ')}`);
     process.exit(1);
 }
 
+// ─────────────────────────────────────────
 const app = express();
+app.set('trust proxy', 1);
+
 const bot = new Bot(process.env.TELEGRAM_TOKEN);
 
+// ─────────────────────────────────────────
+// PATHS
+// ─────────────────────────────────────────
 const DB      = path.join(__dirname, 'db.json');
 const UPLOADS = path.join(__dirname, 'uploads');
-const PUBLIC = path.join(__dirname, 'public');
+const PUBLIC  = path.join(__dirname, 'public');
 
 if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
-if (!fs.existsSync(PUBLIC))  fs.mkdirSync(PUBLIC,  { recursive: true });
+if (!fs.existsSync(PUBLIC))  fs.mkdirSync(PUBLIC, { recursive: true });
 
 // ─────────────────────────────────────────
-//  Middleware
+// SEGURIDAD PRO
 // ─────────────────────────────────────────
-app.use(express.json());
+app.use(helmet());
+
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(PUBLIC));
 
 app.use(session({
-    secret:            process.env.SESSION_SECRET,
-    resave:            true,
+    name: 'cloudgram.sid',
+    secret: process.env.SESSION_SECRET,
+    resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
         httpOnly: true,
-        secure:   false,
+        secure: true, // 🔥 en Render funciona (HTTPS)
         sameSite: 'lax',
-        maxAge:   8 * 60 * 60 * 1000
+        maxAge: 8 * 60 * 60 * 1000
     }
 }));
 
 // ─────────────────────────────────────────
-//  Multer – SIN límite de tamaño
+// MULTER (SIN LÍMITE)
 // ─────────────────────────────────────────
-const upload = multer({ dest: UPLOADS }); // sin limits: sin restricción
+const upload = multer({
+    dest: UPLOADS
+});
 
 // ─────────────────────────────────────────
-//  Logger
+// LOGGER PRO
 // ─────────────────────────────────────────
 function log(level, msg, extra = '') {
     const ts = new Date().toISOString();
-    console.log(`[${ts}] [${level.toUpperCase()}] ${msg}${extra ? ' — ' + extra : ''}`);
+    console.log(`[${ts}] [${level}] ${msg}${extra ? ' → ' + extra : ''}`);
 }
 
 // ─────────────────────────────────────────
-//  DB helpers (atomic write)
+// DB
 // ─────────────────────────────────────────
 function getDB() {
     try {
         return fs.existsSync(DB) ? JSON.parse(fs.readFileSync(DB, 'utf-8')) : [];
-    } catch {
-        log('warn', 'DB read failed, returning empty array');
+    } catch (e) {
+        log('WARN', 'DB read error', e.message);
         return [];
     }
 }
 
 function saveDB(data) {
     const tmp = DB + '.tmp';
-    fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf-8');
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
     fs.renameSync(tmp, DB);
 }
 
 // ─────────────────────────────────────────
-//  Auth middleware
+// AUTH
 // ─────────────────────────────────────────
 const auth = (req, res, next) => {
-    if (!req.session.user) return res.status(401).json({ error: 'unauthorized' });
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'No autorizado' });
+    }
     next();
 };
 
 // ─────────────────────────────────────────
-//  Rate limiter (login brute-force)
+// RATE LIMIT LOGIN
 // ─────────────────────────────────────────
-const loginAttempts = new Map();
-const BLOCK_AFTER   = 5;
-const BLOCK_WINDOW  = 15 * 60 * 1000;
+const attempts = new Map();
 
-function checkRateLimit(ip) {
-    const now   = Date.now();
-    const entry = loginAttempts.get(ip) || { count: 0, firstAt: now };
-    if (now - entry.firstAt > BLOCK_WINDOW) {
-        loginAttempts.set(ip, { count: 1, firstAt: now });
+function checkLogin(ip) {
+    const now = Date.now();
+    const data = attempts.get(ip) || { count: 0, time: now };
+
+    if (now - data.time > 15 * 60 * 1000) {
+        attempts.set(ip, { count: 1, time: now });
         return true;
     }
-    entry.count++;
-    loginAttempts.set(ip, entry);
-    return entry.count <= BLOCK_AFTER;
+
+    data.count++;
+    attempts.set(ip, data);
+
+    return data.count <= 5;
 }
 
 // ─────────────────────────────────────────
-//  Routes (API PRIMERO)
+// STATIC
 // ─────────────────────────────────────────
+app.use(express.static(PUBLIC));
 
+// ─────────────────────────────────────────
+// API
+// ─────────────────────────────────────────
 app.get('/api/session', (req, res) => {
     res.json({ logged: !!req.session.user, user: req.session.user || null });
 });
 
 app.post('/api/login', (req, res) => {
-    const ip = req.ip || req.socket.remoteAddress;
-    if (!checkRateLimit(ip)) return res.status(429).json({ error: 'Demasiados intentos.' });
-    
+    const ip = req.ip;
+
+    if (!checkLogin(ip)) {
+        return res.status(429).json({ error: 'Demasiados intentos' });
+    }
+
     const { user, password } = req.body;
+
     if (user === process.env.APP_USER && password === process.env.APP_PASSWORD) {
         req.session.user = user;
         return req.session.save(() => res.json({ success: true }));
     }
-    res.status(401).json({ success: false, error: 'Credenciales incorrectas' });
+
+    res.status(401).json({ error: 'Credenciales incorrectas' });
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(() => res.json({ success: true }));
 });
 
 app.get('/api/files', auth, (req, res) => {
     res.json(getDB());
 });
 
+// SUBIDA PRO
 app.post('/api/upload', auth, upload.single('archivo'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'No hay archivo' });
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+
     const tmpPath = req.file.path;
+
     try {
-        const msg = await bot.api.sendDocument(process.env.CHAT_ID, new InputFile(tmpPath, req.file.originalname));
+        const msg = await bot.api.sendDocument(
+            process.env.CHAT_ID,
+            new InputFile(tmpPath, req.file.originalname)
+        );
+
         const db = getDB();
+
         const entry = {
             id: Date.now(),
             nombre: req.file.originalname,
-            ruta: (req.body.carpeta || 'General').replace(/^\/+|\/+$/g, ''),
+            carpeta: (req.body.carpeta || 'General').trim(),
             file_id: msg.document.file_id,
-            tipo: req.file.originalname.split('.').pop().toLowerCase(),
-            size: (req.file.size / (1024 * 1024)).toFixed(3),
-            fecha: Date.now()
+            tipo: req.file.mimetype,
+            size: req.file.size,
+            fecha: new Date().toISOString()
         };
+
         db.push(entry);
         saveDB(db);
+
         res.json({ success: true, entry });
+
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        log('ERROR', 'Upload failed', e.message);
+        res.status(500).json({ error: 'Error subiendo archivo' });
+
     } finally {
         if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
     }
 });
 
-// ─────────────────────────────────────────
-//  MANEJADOR DE WEB (AL FINAL DE TODO)
-// ─────────────────────────────────────────
+// ELIMINAR ARCHIVO
+app.delete('/api/file/:id', auth, (req, res) => {
+    const id = Number(req.params.id);
+    let db = getDB();
 
-// 1. Servir archivos estáticos (CSS, JS)
-app.use(express.static(PUBLIC));
+    db = db.filter(f => f.id !== id);
+    saveDB(db);
 
-// 2. Cualquier otra ruta que no sea API, sirve el index.html
-app.get('*', (req, res) => {
+    res.json({ success: true });
+});
+
+// ─────────────────────────────────────────
+// FALLBACK (FIX DEFINITIVO)
+// ─────────────────────────────────────────
+app.use((req, res) => {
     const index = path.join(PUBLIC, 'index.html');
+
     if (fs.existsSync(index)) {
         res.sendFile(index);
     } else {
-        res.status(404).send("Error: No encuentro el index.html en " + PUBLIC);
+        res.status(404).send('No index.html');
     }
 });
 
+// ─────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-    console.log(`🚀 CloudGram en puerto ${PORT}`);
+    log('INFO', `CloudGram PRO running on port ${PORT}`);
 });
