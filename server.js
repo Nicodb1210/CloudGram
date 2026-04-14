@@ -37,26 +37,19 @@ if (!fs.existsSync(PUBLIC))  fs.mkdirSync(PUBLIC, { recursive: true });
 // ─────────────────────────────────────────
 // SEGURIDAD PRO
 // ─────────────────────────────────────────
-app.use(helmet());
-
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-app.set('trust proxy', 1); // Asegúrate de que esta línea esté antes de la sesión
-
-app.use(session({
-    name: 'cloudgram.sid',
-    secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
-    proxy: true, // Esto es clave en Render
-    cookie: {
-        httpOnly: true,
-        secure: true, 
-        sameSite: 'none', // Cambiado para que funcione a través del dominio de Render
-        maxAge: 8 * 60 * 60 * 1000
-    }
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", "'unsafe-inline'"], // Esto permite tus scripts del index.html
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "https:"],
+        "connect-src": ["'self'"],
+      },
+    },
+  })
+);
 
 // ─────────────────────────────────────────
 // MULTER (SIN LÍMITE)
