@@ -27,6 +27,8 @@ app.use(
         "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         "font-src": ["'self'", "https://fonts.gstatic.com"],
         "img-src": ["'self'", "data:", "https:", "https://api.telegram.org"],
+        "media-src": ["'self'", "https://api.telegram.org"],
+        "frame-src": ["'self'", "https://api.telegram.org"],
         "connect-src": ["'self'"],
       },
     },
@@ -100,28 +102,31 @@ app.get('/api/files', auth, (req, res) => {
 
 // RUTA DE SUBIDA CORREGIDA
 app.post('/api/upload', auth, upload.single('archivo'), async (req, res) => {
-    if (!req.file) return res.status(400).send('No file');
+    if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo' });
     try {
         const msg = await bot.api.sendDocument(process.env.CHAT_ID, new InputFile(req.file.path, req.file.originalname));
+        if (!msg || !msg.document) throw new Error('Telegram no devolvió documento');
         const db = getDB();
         const ext = path.extname(req.file.originalname).toLowerCase().replace('.', '');
         
         db.push({
             id: Date.now(),
             nombre: req.file.originalname,
-            carpeta: (req.body.carpeta || 'General'),
+            carpeta: (req.body.carpeta || 'General').trim() || 'General',
             file_id: msg.document.file_id,
-            size: (req.file.size / (1024 * 1024)).toFixed(2), // Tamaño en MB para el HTML
-            tipo: ext || 'file', // Extensión necesaria para los iconos
+            size: (req.file.size / (1024 * 1024)).toFixed(2),
+            tipo: ext || 'file',
             fecha: new Date().toISOString()
         });
         saveDB(db);
         res.json({ success: true });
     } catch (e) { 
         console.error(e);
-        res.status(500).send('Error al enviar a Telegram'); 
+        res.status(500).json({ error: 'Error al enviar a Telegram' });
     }
-    finally { if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); }
+    finally { 
+        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    }
 });
 
 // NUEVA RUTA: BORRAR ARCHIVO
@@ -151,13 +156,16 @@ app.get('/api/preview/:file_id', auth, async (req, res) => {
 
 // ... el resto del código arriba igual ...
 
-// STATIC & FALLBACK (CORREGIDO PARA NODE v22)
-app.use(express.static(PUBLIC));
-// Esta opción no usa asteriscos, usa un middleware directo
+// STATIC & FALLBACK
 app.use(express.static(PUBLIC));
 
 app.use((req, res) => {
-    res.sendFile(path.join(PUBLIC, 'index.html'));
+    const indexFile = path.join(PUBLIC, 'index.html');
+    if (fs.existsSync(indexFile)) {
+        res.sendFile(indexFile);
+    } else {
+        res.status(404).send('Not found');
+    }
 });
 
 const PORT = process.env.PORT || 10000;
