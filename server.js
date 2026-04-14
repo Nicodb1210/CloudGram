@@ -21,7 +21,7 @@ const bot = new Bot(process.env.TELEGRAM_TOKEN);
 
 const DB      = path.join(__dirname, 'db.json');
 const UPLOADS = path.join(__dirname, 'uploads');
-const PUBLIC = __dirname;
+const PUBLIC = path.join(__dirname, 'public');
 
 if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
 if (!fs.existsSync(PUBLIC))  fs.mkdirSync(PUBLIC,  { recursive: true });
