@@ -188,15 +188,13 @@ app.post('/api/delete-folder', auth, (req, res) => {
   if (!carpeta) return res.status(400).json({ error: 'Carpeta inválida' });
 
   let db = getDB();
-  const before = db.length;
-
   db = db.filter((f) => {
     const fileFolder = normalizeFolder(f.carpeta);
     return !(fileFolder === carpeta || fileFolder.startsWith(carpeta + '/'));
   });
 
   saveDB(db);
-  res.json({ success: true, deleted: before - db.length });
+  res.json({ success: true });
 });
 
 app.get('/api/download/:file_id', auth, async (req, res) => {
