@@ -225,10 +225,13 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', uptime: process.uptime().toFixed(0) + 's' });
 });
 
-app.get('(.*)', (req, res) => { 
+app.use((req, res) => {
     const index = path.join(PUBLIC, 'index.html');
-    if (fs.existsSync(index)) return res.sendFile(index);
-    res.status(404).send('Not found');
+    if (fs.existsSync(index)) {
+        res.sendFile(index);
+    } else {
+        res.status(404).send('Archivo index.html no encontrado en: ' + PUBLIC);
+    }
 });
 
 app.use((err, req, res, next) => {
