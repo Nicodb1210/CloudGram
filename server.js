@@ -104,7 +104,7 @@ function checkRateLimit(ip) {
 }
 
 // ─────────────────────────────────────────
-//  Routes
+//  Routes (API PRIMERO)
 // ─────────────────────────────────────────
 
 app.get('/api/session', (req, res) => {
@@ -113,29 +113,14 @@ app.get('/api/session', (req, res) => {
 
 app.post('/api/login', (req, res) => {
     const ip = req.ip || req.socket.remoteAddress;
-    if (!checkRateLimit(ip)) {
-        return res.status(429).json({ error: 'Demasiados intentos. Espera 15 minutos.' });
-    }
+    if (!checkRateLimit(ip)) return res.status(429).json({ error: 'Demasiados intentos.' });
+    
     const { user, password } = req.body;
     if (user === process.env.APP_USER && password === process.env.APP_PASSWORD) {
         req.session.user = user;
-        loginAttempts.delete(ip);
-        log('info', `Login OK — user: ${user}`);
-        return req.session.save(err => {
-            if (err) return res.status(500).json({ error: 'Error al guardar sesión' });
-            res.json({ success: true });
-        });
+        return req.session.save(() => res.json({ success: true }));
     }
-    log('warn', `Login failed for user: "${user}" from ${ip}`);
     res.status(401).json({ success: false, error: 'Credenciales incorrectas' });
-});
-
-app.post('/api/logout', (req, res) => {
-    const user = req.session.user;
-    req.session.destroy(() => {
-        log('info', `Logout — user: ${user}`);
-        res.json({ success: true });
-    });
 });
 
 app.get('/api/files', auth, (req, res) => {
@@ -143,114 +128,48 @@ app.get('/api/files', auth, (req, res) => {
 });
 
 app.post('/api/upload', auth, upload.single('archivo'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo' });
+    if (!req.file) return res.status(400).json({ error: 'No hay archivo' });
     const tmpPath = req.file.path;
     try {
-        log('info', `Uploading: ${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} KB)`);
-        const msg = await bot.api.sendDocument(
-            process.env.CHAT_ID,
-            new InputFile(tmpPath, req.file.originalname)
-        );
-        const db    = getDB();
+        const msg = await bot.api.sendDocument(process.env.CHAT_ID, new InputFile(tmpPath, req.file.originalname));
+        const db = getDB();
         const entry = {
-            id:      Date.now(),
-            nombre:  req.file.originalname,
-            ruta:    (req.body.carpeta || 'General').replace(/\\/g, '/').replace(/^\/+|\/+$/g, ''),
+            id: Date.now(),
+            nombre: req.file.originalname,
+            ruta: (req.body.carpeta || 'General').replace(/^\/+|\/+$/g, ''),
             file_id: msg.document.file_id,
-            tipo:    req.file.originalname.split('.').pop().toLowerCase(),
-            size:    (req.file.size / 1024 / 1024).toFixed(3),
-            fecha:   Date.now()
+            tipo: req.file.originalname.split('.').pop().toLowerCase(),
+            size: (req.file.size / (1024 * 1024)).toFixed(3),
+            fecha: Date.now()
         };
         db.push(entry);
         saveDB(db);
-        log('info', `Upload OK — ${entry.nombre}`);
         res.json({ success: true, entry });
     } catch (e) {
-        log('error', `Upload failed: ${e.message}`);
         res.status(500).json({ error: e.message });
     } finally {
-        if (fs.existsSync(tmpPath)) { try { fs.unlinkSync(tmpPath); } catch {} }
+        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
     }
 });
 
-app.delete('/api/files/:id', auth, (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id)) return res.status(400).json({ error: 'ID inválido' });
-    let db = getDB();
-    const before = db.length;
-    db = db.filter(f => f.id !== id);
-    if (db.length === before) return res.status(404).json({ error: 'Archivo no encontrado' });
-    saveDB(db);
-    log('info', `Deleted file id: ${id}`);
-    res.json({ success: true });
-});
+// ─────────────────────────────────────────
+//  MANEJADOR DE WEB (AL FINAL DE TODO)
+// ─────────────────────────────────────────
 
-// Download – devuelve la URL de Telegram
-app.get('/api/download/:fileId', auth, async (req, res) => {
-    const fileId = req.params.fileId;
-    if (!/^[A-Za-z0-9_-]+$/.test(fileId)) return res.status(400).json({ error: 'File ID inválido' });
-    try {
-        const file = await bot.api.getFile(fileId);
-        const url  = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`;
-        res.json({ url });
-    } catch (e) {
-        log('error', `Download failed for ${fileId}: ${e.message}`);
-        res.status(500).json({ error: 'No se pudo obtener el enlace de descarga' });
-    }
-});
+// 1. Servir archivos estáticos (CSS, JS)
+app.use(express.static(PUBLIC));
 
-// Proxy de previsualización – evita exponer el token al cliente
-app.get('/api/preview/:fileId', auth, async (req, res) => {
-    const fileId = req.params.fileId;
-    if (!/^[A-Za-z0-9_-]+$/.test(fileId)) return res.status(400).json({ error: 'File ID inválido' });
-    try {
-        const file = await bot.api.getFile(fileId);
-        const url  = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`;
-
-        const https = require('https');
-        https.get(url, (telegramRes) => {
-            res.setHeader('Content-Type', telegramRes.headers['content-type'] || 'application/octet-stream');
-            res.setHeader('Cache-Control', 'private, max-age=3600');
-            telegramRes.pipe(res);
-        }).on('error', e => {
-            res.status(500).json({ error: 'Error al obtener el archivo' });
-        });
-    } catch (e) {
-        log('error', `Preview failed for ${fileId}: ${e.message}`);
-        res.status(500).json({ error: 'No se pudo previsualizar' });
-    }
-});
-
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', uptime: process.uptime().toFixed(0) + 's' });
-});
-
-app.use((req, res) => {
+// 2. Cualquier otra ruta que no sea API, sirve el index.html
+app.get('*', (req, res) => {
     const index = path.join(PUBLIC, 'index.html');
     if (fs.existsSync(index)) {
         res.sendFile(index);
     } else {
-        res.status(404).send('Archivo index.html no encontrado en: ' + PUBLIC);
+        res.status(404).send("Error: No encuentro el index.html en " + PUBLIC);
     }
-});
-
-app.use((err, req, res, next) => {
-    log('error', err.message);
-    res.status(500).json({ error: 'Error interno del servidor' });
 });
 
 const PORT = process.env.PORT || 3000;
-app.use((req, res) => {
-    // Intentamos buscar el index.html dentro de la carpeta PUBLIC
-    const indexPath = path.join(PUBLIC, 'index.html');
-    
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        // Si no lo encuentra, nos dirá exactamente dónde lo buscó
-        res.status(404).send('Error: El archivo index.html debería estar en: ' + indexPath);
-    }
-});
 app.listen(PORT, () => {
-    log('info', `🚀 CloudGram Enterprise → http://localhost:${PORT}`);
+    console.log(`🚀 CloudGram en puerto ${PORT}`);
 });
