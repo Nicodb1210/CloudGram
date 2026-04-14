@@ -66,8 +66,8 @@ input::placeholder{color:var(--muted);}
 .upanel.drag-over{border-color:var(--accent);background:rgba(108,99,255,.05);box-shadow:0 0 0 3px rgba(108,99,255,.15);}
 .uptitle{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
 .uprow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.filelabel{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;min-width:180px;height:44px;}
-.filelabel:hover,.filelabel.has{border-color:var(--accent);color:var(--accent2);}
+.filelabel{display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.09);border-radius:10px;font-size:13px;color:#f3f4f6;cursor:pointer;transition:all .15s;white-space:nowrap;min-width:180px;height:44px;}
+.filelabel:hover,.filelabel.has{border-color:rgba(167,139,250,.38);background:linear-gradient(135deg, rgba(108,99,255,.18), rgba(255,255,255,.05));color:#fff;box-shadow:0 10px 26px rgba(108,99,255,.18);}
 #folder-in{flex:1;min-width:150px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;height:44px;outline:none;transition:border-color .2s;font-family:'DM Sans',sans-serif;}
 #folder-in:focus{border-color:var(--accent);}
 #folder-in::placeholder{color:var(--muted);}
@@ -96,45 +96,37 @@ input::placeholder{color:var(--muted);}
 .sbtn:hover:not(.active){color:var(--text);}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
 .flist{display:flex;flex-direction:column;gap:6px;}
-.fcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px 18px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;min-height:190px;}
-.fcard::before{
-  content:'';
-  position:absolute;
-  inset:0;
-  background:linear-gradient(135deg,rgba(108,99,255,.08),transparent 60%);
-  opacity:0;
-  transition:opacity .2s;
-  pointer-events:none;
-  z-index:0;
-}
+.fcard,.fc,.fdrow,.frow{position:relative;}
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px 18px;transition:all .18s;display:flex;flex-direction:column;gap:10px;overflow:hidden;min-height:190px;}
+.fcard::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(108,99,255,.08),transparent 60%);opacity:0;transition:opacity .2s;pointer-events:none;z-index:0;}
 .fcard:hover{border-color:rgba(108,99,255,.35);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25);}
 .fcard:hover::before{opacity:1;}
-.ficon-wrap{width:48px;height:48px;background:rgba(108,99,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;transition:transform .2s;}
+.ficon-wrap{width:48px;height:48px;background:rgba(108,99,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;transition:transform .2s;position:relative;z-index:1;}
 .fcard:hover .ficon-wrap{transform:scale(1.08);}
-.fname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fcount{font-size:11px;color:var(--muted);}
-.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;transition:all .18s;cursor:pointer;}
+.fname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative;z-index:1;}
+.fcount{font-size:11px;color:var(--muted);position:relative;z-index:1;}
+.fc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;transition:all .18s;}
 .fc:hover{border-color:rgba(108,99,255,.3);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.25);}
 .fc-thumb{width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:12px;display:block;background:rgba(255,255,255,.04);}
 .fc-placeholder{width:100%;height:110px;border-radius:8px;margin-bottom:12px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:36px;}
 .fc-badge{display:inline-flex;align-items:center;justify-content:center;font-size:22px;width:48px;height:48px;border-radius:12px;margin-bottom:12px;}
 .fc-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
 .fc-meta{font-size:11px;color:var(--muted);margin-bottom:12px;}
-.fc-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;}
-.frow{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:14px;transition:all .15s;cursor:pointer;}
+.fc-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;position:relative;z-index:3;}
+.frow{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:14px;transition:all .15s;}
 .frow:hover{border-color:rgba(108,99,255,.25);background:rgba(108,99,255,.04);}
 .frow-icon{font-size:20px;flex-shrink:0;}
 .frow-info{flex:1;min-width:0;}
 .frow-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .frow-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.frow-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
-.fdrow{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s;}
+.frow-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;position:relative;z-index:3;}
+.fdrow{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:14px;transition:all .15s;}
 .fdrow:hover{border-color:rgba(108,99,255,.3);background:rgba(108,99,255,.04);}
 #folder-actions{display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:-2px 0 18px;padding:14px;border-radius:16px;background:linear-gradient(135deg, rgba(108,99,255,.16), rgba(255,255,255,.03));border:1px solid rgba(167,139,250,.22);box-shadow:0 14px 40px rgba(0,0,0,.22);}
-.btn-ic,.btn-sm,.filelabel{border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));color:#f3f4f6;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);}
+.btn-ic,.btn-sm{border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));color:#f3f4f6;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);position:relative;z-index:4;pointer-events:auto;}
 .btn-ic{flex:1;height:32px;border-radius:8px;cursor:pointer;font-size:12px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'DM Sans',sans-serif;}
 .btn-sm{height:30px;padding:0 12px;background:none;border-radius:7px;cursor:pointer;font-size:12px;transition:all .15s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;}
-.btn-ic:hover,.btn-sm:hover,.filelabel:hover,.filelabel.has{border-color:rgba(167,139,250,.38);background:linear-gradient(135deg, rgba(108,99,255,.18), rgba(255,255,255,.05));color:#fff;box-shadow:0 10px 26px rgba(108,99,255,.18);}
+.btn-ic:hover,.btn-sm:hover{border-color:rgba(167,139,250,.38);background:linear-gradient(135deg, rgba(108,99,255,.18), rgba(255,255,255,.05));color:#fff;box-shadow:0 10px 26px rgba(108,99,255,.18);}
 .btn-ic.primary,.btn-sm.primary{background:linear-gradient(135deg, rgba(108,99,255,.22), rgba(124,58,237,.14));border-color:rgba(167,139,250,.32);color:#fff;}
 .btn-ic.primary:hover,.btn-sm.primary:hover{background:linear-gradient(135deg, rgba(124,58,237,.34), rgba(167,139,250,.18));border-color:rgba(196,181,253,.48);}
 .btn-ic.danger,.btn-sm.danger{border-color:rgba(248,113,113,.22);color:#ffd5d5;}
@@ -201,43 +193,6 @@ input::placeholder{color:var(--muted);}
   #folder-actions .btn-sm, .fc-actions .btn-ic, .frow-actions .btn-sm { width: 100%; }
   .fc-actions { flex-direction: column; }
 }
-.fcard > *,
-.fc > *,
-.fdrow > *,
-.frow > *{
-  position:relative;
-  z-index:1;
-}
-
-.fc-actions,
-.frow-actions{
-  position:relative;
-  z-index:3;
-}
-
-.btn-ic,
-.btn-sm,
-.filelabel,
-.btn-up,
-#prev-dl,
-.prev-close{
-  position:relative;
-  z-index:4;
-  pointer-events:auto;
-}
-.fcard,
-.fc,
-.fdrow,
-.frow{
-  position:relative;
-}
-
-.fcard::before,
-.fc::before,
-.fc::after{
-  pointer-events:none;
-}
-
 </style>
 </head>
 <body>
@@ -368,63 +323,37 @@ function toast(msg, type = "info") {
 }
 
 function esc(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
-
 function normalizePath(p) {
   return String(p || "").trim().replace(/^\/+|\/+$/g, "").replace(/\/{2,}/g, "/");
 }
+function enc(v) { return encodeURIComponent(v || ""); }
+function dec(v) { return decodeURIComponent(v || ""); }
 
-function enc(v) {
-  return encodeURIComponent(v || "");
+function ficon(ext){
+  if(["jpg","jpeg","png","gif","webp","svg","bmp"].includes(ext)) return{i:"🖼️",c:"ti"};
+  if(["mp4","mov","avi","mkv","webm"].includes(ext)) return{i:"🎬",c:"tv"};
+  if(["pdf"].includes(ext)) return{i:"📄",c:"tp"};
+  if(["doc","docx","xls","xlsx","ppt","pptx","txt","md"].includes(ext)) return{i:"📝",c:"td"};
+  if(["zip","rar","7z","tar","gz"].includes(ext)) return{i:"🗜️",c:"tz"};
+  if(["js","ts","py","html","css","json","sh","csv"].includes(ext)) return{i:"💻",c:"tc"};
+  return{i:"📁",c:"tm"};
 }
-
-function dec(v) {
-  return decodeURIComponent(v || "");
-}
-
-function ficon(ext) {
-  if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp"].includes(ext)) return { i: "🖼️", c: "ti" };
-  if (["mp4", "mov", "avi", "mkv", "webm"].includes(ext)) return { i: "🎬", c: "tv" };
-  if (["pdf"].includes(ext)) return { i: "📄", c: "tp" };
-  if (["doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "md"].includes(ext)) return { i: "📝", c: "td" };
-  if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return { i: "🗜️", c: "tz" };
-  if (["js", "ts", "py", "html", "css", "json", "sh", "csv"].includes(ext)) return { i: "💻", c: "tc" };
-  return { i: "📁", c: "tm" };
-}
-
-function isImg(t) { return ["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(t); }
-function isVid(t) { return ["mp4", "mov", "webm", "avi", "mkv"].includes(t); }
-function isAud(t) { return ["mp3", "ogg", "wav", "m4a"].includes(t); }
-function isPdf(t) { return t === "pdf"; }
-function isTxt(t) { return ["txt", "md", "json", "js", "ts", "py", "html", "css", "sh", "csv"].includes(t); }
-
-function fsize(mb) {
-  if (mb === undefined || mb === null || mb === "") return "—";
-  const n = parseFloat(mb);
-  if (isNaN(n)) return "—";
-  if (n >= 1024) return (n / 1024).toFixed(1) + " GB";
-  if (n >= 1) return n.toFixed(1) + " MB";
-  return (n * 1024).toFixed(0) + " KB";
-}
-
-function fdate(ts) {
-  if (!ts) return "";
-  return new Date(ts).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
-}
+function isImg(t){return["jpg","jpeg","png","gif","webp","bmp"].includes(t);}
+function isVid(t){return["mp4","mov","webm","avi","mkv"].includes(t);}
+function isAud(t){return["mp3","ogg","wav","m4a"].includes(t);}
+function isPdf(t){return t==="pdf";}
+function isTxt(t){return["txt","md","json","js","ts","py","html","css","sh","csv"].includes(t);}
+function fsize(mb){if(mb===undefined||mb===null||mb==="")return"—";const n=parseFloat(mb);if(isNaN(n))return"—";if(n>=1024)return(n/1024).toFixed(1)+" GB";if(n>=1)return n.toFixed(1)+" MB";return(n*1024).toFixed(0)+" KB";}
+function fdate(ts){if(!ts)return"";return new Date(ts).toLocaleDateString("es-ES",{day:"2-digit",month:"short",year:"numeric"});}
 
 async function doLogin() {
   const u = document.getElementById("lu").value.trim();
   const p = document.getElementById("lp").value;
   const b = document.getElementById("lbtn");
   const e = document.getElementById("lerr");
-
   if (!u || !p) return;
-
   b.disabled = true;
   b.innerHTML = '<span class="spinner"></span>';
   e.style.display = "none";
@@ -461,7 +390,7 @@ async function doLogin() {
 
 async function doLogout() {
   try {
-    const r = await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+    const r = await fetch("/api/logout", { method:"POST", credentials:"same-origin" });
     if (r.ok) location.reload();
   } catch {
     location.reload();
@@ -470,7 +399,7 @@ async function doLogout() {
 
 async function loadFiles() {
   try {
-    const r = await fetch("/api/files", { credentials: "same-origin" });
+    const r = await fetch("/api/files", { credentials:"same-origin" });
     if (r.ok) {
       files = await r.json();
       files = files.map((f) => ({ ...f, carpeta: normalizePath(f.carpeta) }));
@@ -486,7 +415,6 @@ async function loadFiles() {
 
 function updateStats() {
   document.getElementById("st-total").textContent = files.length;
-
   const folders = new Set();
   let size = 0;
   let today = 0;
@@ -512,9 +440,7 @@ function getVisibleFolders(q) {
 
     if (!curPath) {
       const root = folder.split("/")[0];
-      if (root.toLowerCase().includes(q)) {
-        folderMap.set(root, { name: root, path: root });
-      }
+      if (root.toLowerCase().includes(q)) folderMap.set(root, { name: root, path: root });
       return;
     }
 
@@ -542,8 +468,7 @@ function getVisibleFiles(q) {
 }
 
 function renderFolderActions() {
-  const box = document.getElementById("folder-actions");
-  box.style.display = curPath ? "flex" : "none";
+  document.getElementById("folder-actions").style.display = curPath ? "flex" : "none";
 }
 
 function render() {
@@ -577,29 +502,29 @@ function render() {
 
     if (viewMode === "grid") {
       html += `
-        <div class="fcard" onclick="goPath('${enc(fd.path)}', true)">
+        <div class="fcard">
           <div class="ficon-wrap">📁</div>
           <div class="fname">${esc(fd.name)}</div>
           <div class="fcount">${count} elementos</div>
-          <div class="fc-actions" onclick="event.stopPropagation()">
-            <button class="btn-ic primary" onclick="goPath('${enc(fd.path)}', true)">Abrir</button>
-            <button class="btn-ic primary" onclick="downloadFolder('${enc(fd.path)}')">↓</button>
-            <button class="btn-ic danger" onclick="deleteFolder('${enc(fd.path)}')">🗑️</button>
+          <div class="fc-actions">
+            <button class="btn-ic primary" data-action="open-folder" data-path="${enc(fd.path)}">Abrir</button>
+            <button class="btn-ic primary" data-action="download-folder" data-path="${enc(fd.path)}">↓</button>
+            <button class="btn-ic danger" data-action="delete-folder" data-path="${enc(fd.path)}">🗑️</button>
           </div>
         </div>
       `;
     } else {
       html += `
-        <div class="fdrow" onclick="goPath('${enc(fd.path)}', true)">
+        <div class="fdrow">
           <div class="frow-icon">📁</div>
           <div class="frow-info">
             <div class="frow-name">${esc(fd.name)}</div>
             <div class="frow-meta">${count} elementos</div>
           </div>
-          <div class="frow-actions" onclick="event.stopPropagation()">
-            <button class="btn-sm primary" onclick="goPath('${enc(fd.path)}', true)">Abrir</button>
-            <button class="btn-sm primary" onclick="downloadFolder('${enc(fd.path)}')">↓</button>
-            <button class="btn-sm danger" onclick="deleteFolder('${enc(fd.path)}')">🗑️</button>
+          <div class="frow-actions">
+            <button class="btn-sm primary" data-action="open-folder" data-path="${enc(fd.path)}">Abrir</button>
+            <button class="btn-sm primary" data-action="download-folder" data-path="${enc(fd.path)}">↓</button>
+            <button class="btn-sm danger" data-action="delete-folder" data-path="${enc(fd.path)}">🗑️</button>
           </div>
         </div>
       `;
@@ -616,29 +541,29 @@ function render() {
         : `<div class="fc-placeholder"><div class="fc-badge ${c}">${i}</div></div>`;
 
       html += `
-        <div class="fc" onclick="openPrev(${f.id})">
+        <div class="fc">
           ${thumb}
           <div class="fc-name">${esc(f.nombre)}</div>
           <div class="fc-meta">${fsize(f.size)} · ${fdate(f.fecha)}</div>
-          <div class="fc-actions" onclick="event.stopPropagation()">
-            <button class="btn-ic primary" onclick="openPrev(${f.id})">Ver</button>
-            <button class="btn-ic primary" onclick="doDl('${f.file_id}','${downloadName}')">↓</button>
-            <button class="btn-ic danger" onclick="askDel(${f.id})">🗑️</button>
+          <div class="fc-actions">
+            <button class="btn-ic primary" data-action="preview-file" data-id="${f.id}">Ver</button>
+            <button class="btn-ic primary" data-action="download-file" data-fileid="${f.file_id}" data-name="${downloadName}">↓</button>
+            <button class="btn-ic danger" data-action="delete-file" data-id="${f.id}">🗑️</button>
           </div>
         </div>
       `;
     } else {
       html += `
-        <div class="frow" onclick="openPrev(${f.id})">
+        <div class="frow">
           <div class="frow-icon ${c}">${i}</div>
           <div class="frow-info">
             <div class="frow-name">${esc(f.nombre)}</div>
             <div class="frow-meta">${fsize(f.size)} · ${fdate(f.fecha)}</div>
           </div>
-          <div class="frow-actions" onclick="event.stopPropagation()">
-            <button class="btn-sm primary" onclick="openPrev(${f.id})">Ver</button>
-            <button class="btn-sm primary" onclick="doDl('${f.file_id}','${downloadName}')">↓</button>
-            <button class="btn-sm danger" onclick="askDel(${f.id})">🗑️</button>
+          <div class="frow-actions">
+            <button class="btn-sm primary" data-action="preview-file" data-id="${f.id}">Ver</button>
+            <button class="btn-sm primary" data-action="download-file" data-fileid="${f.file_id}" data-name="${downloadName}">↓</button>
+            <button class="btn-sm danger" data-action="delete-file" data-id="${f.id}">🗑️</button>
           </div>
         </div>
       `;
@@ -652,7 +577,6 @@ function render() {
 function renderBC() {
   const b = document.getElementById("bc");
   let h = `<div class="bc-item" onclick="goHome()">Raíz</div>`;
-
   if (curPath) {
     const parts = curPath.split("/");
     let acc = "";
@@ -661,7 +585,6 @@ function renderBC() {
       h += `<span class="bc-sep">/</span><div class="bc-item" onclick="goPath('${enc(acc)}', true)">${esc(p)}</div>`;
     });
   }
-
   if (typeFilter) h += `<span class="bc-sep">/</span><div class="bc-item">Filtro: ${typeFilter}</div>`;
   b.innerHTML = h;
 }
@@ -671,7 +594,6 @@ function goPath(encodedPath, alreadyEncoded = false) {
   typeFilter = null;
   render();
 }
-
 function goUp() {
   if (!curPath) return;
   const parts = curPath.split("/");
@@ -679,27 +601,23 @@ function goUp() {
   curPath = parts.join("/");
   render();
 }
-
 function goHome() {
   curPath = "";
   typeFilter = null;
   render();
 }
-
 function filterType(t) {
   const map = { img: "ti", video: "tv", pdf: "tp" };
   typeFilter = map[t];
   curPath = "";
   render();
 }
-
 function setView(v) {
   viewMode = v;
   document.getElementById("vg").classList.toggle("active", v === "grid");
   document.getElementById("vl").classList.toggle("active", v === "list");
   render();
 }
-
 function setSort(s) {
   sortBy = s;
   document.querySelectorAll(".sbtn").forEach((b) => b.classList.remove("active"));
@@ -710,7 +628,6 @@ function setSort(s) {
 function onFileSelect() {
   const input = document.getElementById("finput");
   const lbl = document.getElementById("flabel");
-
   if (input.files && input.files.length > 0) {
     lbl.textContent = "✅ " + input.files[0].name;
     lbl.classList.add("has");
@@ -727,9 +644,7 @@ async function doUpload() {
   const prog = document.getElementById("progwrap");
   const bar = document.getElementById("progbar");
 
-  if (!fi.files || !fi.files.length) {
-    return toast("Selecciona un archivo primero", "info");
-  }
+  if (!fi.files || !fi.files.length) return toast("Selecciona un archivo primero", "info");
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>';
@@ -745,9 +660,7 @@ async function doUpload() {
   xhr.withCredentials = true;
 
   xhr.upload.onprogress = (e) => {
-    if (e.lengthComputable) {
-      bar.style.width = (e.loaded / e.total * 100) + "%";
-    }
+    if (e.lengthComputable) bar.style.width = (e.loaded / e.total * 100) + "%";
   };
 
   xhr.onload = () => {
@@ -763,7 +676,6 @@ async function doUpload() {
     } else if (xhr.status === 401) {
       toast("Tu sesión ha caducado. Inicia sesión otra vez", "error");
     } else {
-      console.error("Upload error:", xhr.responseText);
       toast("Error al subir archivo", "error");
     }
   };
@@ -795,17 +707,11 @@ async function downloadFolder(encodedPath) {
     return folder === folderPath || folder.startsWith(folderPath + "/");
   });
 
-  if (!items.length) {
-    toast("La carpeta está vacía", "info");
-    return;
-  }
+  if (!items.length) return toast("La carpeta está vacía", "info");
 
   toast(`Descargando ${items.length} archivo(s)`, "info");
-
   items.forEach((item, index) => {
-    setTimeout(() => {
-      doDl(item.file_id, enc(item.nombre));
-    }, index * 450);
+    setTimeout(() => doDl(item.file_id, enc(item.nombre)), index * 450);
   });
 }
 
@@ -818,7 +724,6 @@ function askDel(id) {
   document.getElementById("dmodal").classList.add("open");
   document.getElementById("delbtn").onclick = () => doDel(id);
 }
-
 function closeDel() {
   document.getElementById("dmodal").classList.remove("open");
 }
@@ -829,11 +734,7 @@ async function doDel(id) {
   btn.innerHTML = '<span class="spinner"></span>';
 
   try {
-    const r = await fetch("/api/delete/" + id, {
-      method: "DELETE",
-      credentials: "same-origin"
-    });
-
+    const r = await fetch("/api/delete/" + id, { method:"DELETE", credentials:"same-origin" });
     if (r.ok) {
       toast("Archivo eliminado", "success");
       closeDel();
@@ -858,10 +759,10 @@ async function deleteFolder(encodedPath) {
 
   try {
     const r = await fetch("/api/delete-folder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({ carpeta: folderPath })
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      credentials:"same-origin",
+      body:JSON.stringify({ carpeta: folderPath })
     });
 
     if (r.ok) {
@@ -889,7 +790,6 @@ function openPrev(id) {
   if (!f) return;
 
   prevFile = f;
-
   const overlay = document.getElementById("prev-overlay");
   const content = document.getElementById("prev-content");
   const info = document.getElementById("prev-info");
@@ -929,9 +829,23 @@ function doDlCurrent() {
   if (prevFile) doDl(prevFile.file_id, enc(prevFile.nombre));
 }
 
+document.getElementById("fc").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  const action = btn.dataset.action;
+
+  if (action === "open-folder") return goPath(btn.dataset.path, true);
+  if (action === "download-folder") return downloadFolder(btn.dataset.path);
+  if (action === "delete-folder") return deleteFolder(btn.dataset.path);
+  if (action === "preview-file") return openPrev(Number(btn.dataset.id));
+  if (action === "download-file") return doDl(btn.dataset.fileid, btn.dataset.name);
+  if (action === "delete-file") return askDel(Number(btn.dataset.id));
+});
+
 (async () => {
   try {
-    const r = await fetch("/api/session", { credentials: "same-origin" });
+    const r = await fetch("/api/session", { credentials:"same-origin" });
     const d = await r.json();
     if (d.logged) {
       document.getElementById("login").style.display = "none";
@@ -946,9 +860,7 @@ function doDlCurrent() {
 })();
 
 document.getElementById("lbtn").addEventListener("click", doLogin);
-document.getElementById("flabel").addEventListener("click", () => {
-  document.getElementById("finput").click();
-});
+document.getElementById("flabel").addEventListener("click", () => document.getElementById("finput").click());
 document.getElementById("finput").addEventListener("change", onFileSelect);
 document.getElementById("upbtn").addEventListener("click", doUpload);
 </script>
