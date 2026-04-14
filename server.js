@@ -45,18 +45,6 @@ app.use(session({
     }
 }));
 
-app.use((req, res) => {
-    // Intentamos buscar el index.html dentro de la carpeta PUBLIC
-    const indexPath = path.join(PUBLIC, 'index.html');
-    
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        // Si no lo encuentra, nos dirá exactamente dónde lo buscó
-        res.status(404).send('Error: El archivo index.html debería estar en: ' + indexPath);
-    }
-});
-
 // ─────────────────────────────────────────
 //  Multer – SIN límite de tamaño
 // ─────────────────────────────────────────
@@ -252,6 +240,17 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
+app.use((req, res) => {
+    // Intentamos buscar el index.html dentro de la carpeta PUBLIC
+    const indexPath = path.join(PUBLIC, 'index.html');
+    
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        // Si no lo encuentra, nos dirá exactamente dónde lo buscó
+        res.status(404).send('Error: El archivo index.html debería estar en: ' + indexPath);
+    }
+});
 app.listen(PORT, () => {
     log('info', `🚀 CloudGram Enterprise → http://localhost:${PORT}`);
 });
