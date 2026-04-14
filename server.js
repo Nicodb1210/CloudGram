@@ -38,17 +38,19 @@ app.use(
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// SESIÓN
+// SESION
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(session({
     name: 'cloudgram.sid',
     secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     proxy: true,
     cookie: {
         httpOnly: true,
-        secure: true,
-        sameSite: 'none',
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
         maxAge: 8 * 60 * 60 * 1000
     }
 }));
@@ -143,7 +145,9 @@ app.get('/api/download/:file_id', auth, async (req, res) => {
         const file = await bot.api.getFile(req.params.file_id);
         const url = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`;
         res.json({ url });
-    } catch (e) { res.status(500).json({ error: 'No se pudo obtener el link' }); }
+    } catch (e) {
+        res.status(500).json({ error: 'No se pudo obtener el link' });
+    }
 });
 
 // NUEVA RUTA: VISTA PREVIA (proxy con soporte de Range para vídeo/audio)
@@ -184,8 +188,6 @@ app.get('/api/preview/:file_id', auth, async (req, res) => {
         res.status(404).send('No disponible');
     }
 });
-
-// ... el resto del código arriba igual ...
 
 // STATIC & FALLBACK
 app.use(express.static(PUBLIC));
