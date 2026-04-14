@@ -7,12 +7,9 @@ const path     = require('path');
 const helmet   = require('helmet');
 const { Bot, InputFile } = require('grammy');
 
-// ─────────────────────────────────────────
-// VALIDACIÓN ENV
-// ─────────────────────────────────────────
+// 1. VALIDACIÓN ENV
 const REQUIRED = ['TELEGRAM_TOKEN', 'CHAT_ID', 'APP_USER', 'APP_PASSWORD', 'SESSION_SECRET'];
 const missing  = REQUIRED.filter(k => !process.env[k]);
-
 if (missing.length) {
     console.error(`❌ Missing env vars: ${missing.join(', ')}`);
     process.exit(1);
@@ -20,47 +17,132 @@ if (missing.length) {
 
 const app = express();
 
-// IMPORTANTE: Trust proxy debe ir antes de la sesión para que las cookies funcionen en Render
+// 2. CONFIGURACIÓN BÁSICA Y SEGURIDAD (Orden Crítico)
 app.set('trust proxy', 1);
-
-const bot = new Bot(process.env.TELEGRAM_TOKEN);
-
-// ─────────────────────────────────────────
-// PATHS
-// ─────────────────────────────────────────
-const DB      = path.join(__dirname, 'db.json');
-const UPLOADS = path.join(__dirname, 'uploads');
-const PUBLIC  = path.join(__dirname, 'public');
-
-if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
-if (!fs.existsSync(PUBLIC))  fs.mkdirSync(PUBLIC, { recursive: true });
-
-// ─────────────────────────────────────────
-// SEGURIDAD Y PARSERS
-// ─────────────────────────────────────────
-app.use(
-  helmet({
+app.use(helmet({
     contentSecurityPolicy: {
-      directives: {
-        "default-src": ["'self'"],
-        "script-src": ["'self'", "'unsafe-inline'"], 
-        "style-src": ["'self'", "'unsafe-inline'"],
-        "img-src": ["'self'", "data:", "https:"],
-        "connect-src": ["'self'"],
-      },
-    },
-  })
-);
+        directives: {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "'unsafe-inline'"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "img-src": ["'self'", "data:", "https:"],
+            "connect-src": ["'self'"]
+        }
+    }
+}));
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// ─────────────────────────────────────────
-// CONFIGURACIÓN DE SESIÓN (EL BLOQUE QUE FALTABA)
-// ─────────────────────────────────────────
+// 3. SESIÓN (Debe ir antes de las rutas y del static)
 app.use(session({
     name: 'cloudgram.sid',
     secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true,
+    proxy: true,
+    cookie: {
+        httpOnly: true,
+        secure: true, 
+        sameSite: 'none',
+        maxAge: 8 * 60 * 60 * 1000
+    }
+}));
+
+const bot = new Bot(process.env.TELEGRAM_TOKEN);
+const DB = path.join(__dirname, 'db.json');
+const UPLOADS = path.join(__dirname, 'uploads');
+const PUBLIC = path.join(__dirname, 'public');
+
+if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
+if (!fs.existsSync(PUBLIC))  fs.mkdirSync(PUBLIC, { recursive: true });
+
+const upload = multer({ dest: UPLOADS });
+
+// 4. HELPERS
+function getDB() {
+    try { return fs.existsSync(DB) ? JSON.parse(fs.readFileSync(DB, 'utf-8')) : []; }
+    catch (e) { return []; }
+}
+function saveDB(data) {
+    fs.writeFileSync(DB, JSON.stringify(data, null, 2));
+}
+
+// 5. AUTH MIDDLEWARE (Blindado contra undefined)
+const auth = (req, res, next) => {
+    if (req.session && req.session.user) {
+        return next();
+    }
+    res.status(401).json({ error: 'No autorizado' });
+};
+
+// 6. API ROUTES
+app.get('/api/session', (req, res) => {
+    // Verificación segura para evitar el error de la captura
+    const isLogged = !!(req.session && req.session.user);
+    res.json({ logged: isLogged, user: isLogged ? req.session.user : null });
+});
+
+app.post('/api/login', (req, res) => {
+    const { user, password } = req.body;
+    if (user === process.env.APP_USER && password === process.env.APP_PASSWORD) {
+        req.session.user = user;
+        return req.session.save((err) => {
+            if (err) return res.status(500).json({ error: 'Error al guardar sesión' });
+            res.json({ success: true });
+        });
+    }
+    res.status(401).json({ error: 'Credenciales incorrectas' });
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(() => res.json({ success: true }));
+});
+
+app.get('/api/files', auth, (req, res) => {
+    res.json(getDB());
+});
+
+app.post('/api/upload', auth, upload.single('archivo'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    const tmpPath = req.file.path;
+    try {
+        const msg = await bot.api.sendDocument(process.env.CHAT_ID, new InputFile(tmpPath, req.file.originalname));
+        const db = getDB();
+        const entry = {
+            id: Date.now(),
+            nombre: req.file.originalname,
+            carpeta: (req.body.carpeta || 'General').trim(),
+            file_id: msg.document.file_id,
+            tipo: req.file.mimetype,
+            size: req.file.size,
+            fecha: new Date().toISOString()
+        };
+        db.push(entry);
+        saveDB(db);
+        res.json({ success: true, entry });
+    } catch (e) {
+        res.status(500).json({ error: 'Error Telegram' });
+    } finally {
+        if (fs.existsSync(tmpPath)) fs.unlinkSync(tmpPath);
+    }
+});
+
+app.delete('/api/file/:id', auth, (req, res) => {
+    const id = Number(req.params.id);
+    let db = getDB().filter(f => f.id !== id);
+    saveDB(db);
+    res.json({ success: true });
+});
+
+// 7. STATIC & FALLBACK (Al final)
+app.use(express.static(PUBLIC));
+app.use((req, res) => {
+    res.sendFile(path.join(PUBLIC, 'index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 CloudGram PRO en puerto ${PORT}`));    secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
     proxy: true,
