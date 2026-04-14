@@ -1,4 +1,404 @@
 <body>
+  <style>
+    /* PREMIUM UPGRADE */
+:root{
+  --bg:#07080d;
+  --surface:#10131c;
+  --card:#151925;
+  --card-2:#1a1f2d;
+  --border:rgba(255,255,255,0.09);
+  --border-strong:rgba(167,139,250,0.35);
+  --accent:#8b5cf6;
+  --accent2:#c4b5fd;
+  --accent3:#ffffff;
+  --accentGlow:rgba(139,92,246,0.32);
+  --accentGlowSoft:rgba(139,92,246,0.18);
+  --text:#f5f7ff;
+  --muted:#9aa3b2;
+  --danger:#ff6b81;
+  --success:#34d399;
+}
+
+/* ATMOSPHERE */
+body{
+  background:
+    radial-gradient(circle at 15% 20%, rgba(139,92,246,0.18), transparent 28%),
+    radial-gradient(circle at 82% 78%, rgba(255,255,255,0.06), transparent 24%),
+    radial-gradient(circle at 70% 18%, rgba(124,58,237,0.14), transparent 22%),
+    linear-gradient(135deg, #06070b 0%, #0d1018 45%, #090b12 100%);
+  color:var(--text);
+}
+
+body::before{
+  opacity:.28;
+}
+
+.g1{
+  background:radial-gradient(circle, rgba(139,92,246,0.9) 0%, rgba(139,92,246,0) 70%);
+  opacity:.2;
+}
+
+.g2{
+  background:radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 70%);
+  opacity:.08;
+}
+
+/* SHELL */
+.sidebar{
+  background:linear-gradient(180deg, rgba(15,18,27,0.96), rgba(11,13,20,0.96));
+  border-right:1px solid rgba(255,255,255,0.08);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,0.03), 20px 0 60px rgba(0,0,0,0.28);
+  backdrop-filter:blur(16px);
+}
+
+.main{
+  position:relative;
+}
+
+.main::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.015), transparent 20%),
+    radial-gradient(circle at top right, rgba(139,92,246,0.08), transparent 24%);
+  pointer-events:none;
+}
+
+/* BRAND */
+.ltitle,
+.slogo-text{
+  background:linear-gradient(135deg, #ffffff 0%, #e9e4ff 35%, #a78bfa 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.licon,
+.uavatar{
+  box-shadow:
+    0 12px 30px rgba(139,92,246,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+/* PANELS */
+.lcard,
+.upanel,
+.scard,
+.fcard,
+.fc,
+.frow,
+.fdrow,
+.vtoggle,
+.suser{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.028), rgba(255,255,255,0.012)),
+    var(--card);
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    0 20px 55px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.upanel,
+.scard,
+.fcard,
+.fc{
+  position:relative;
+  overflow:hidden;
+}
+
+.upanel::before,
+.scard::before,
+.fcard::after,
+.fc::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.upanel::before{
+  background:linear-gradient(135deg, rgba(139,92,246,0.1), transparent 35%, transparent 65%, rgba(255,255,255,0.03));
+}
+
+.scard{
+  border-color:rgba(255,255,255,0.09);
+}
+
+.scard:hover,
+.upanel:hover,
+.fcard:hover,
+.fc:hover,
+.frow:hover,
+.fdrow:hover{
+  border-color:rgba(196,181,253,0.24);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,0.34),
+    0 0 0 1px rgba(139,92,246,0.12),
+    0 0 30px rgba(139,92,246,0.08);
+}
+
+/* NAV */
+.nitem{
+  border:1px solid transparent;
+}
+
+.nitem.active{
+  color:#fff;
+  background:
+    linear-gradient(135deg, rgba(139,92,246,0.28), rgba(139,92,246,0.16));
+  border-color:rgba(167,139,250,0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 8px 24px rgba(139,92,246,0.12);
+}
+
+.nitem:hover{
+  background:rgba(255,255,255,0.045);
+  border-color:rgba(255,255,255,0.06);
+}
+
+/* INPUTS */
+input[type=text],
+input[type=password],
+#search,
+#folder-in{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  color:var(--text);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+input[type=text]:focus,
+input[type=password]:focus,
+#search:focus,
+#folder-in:focus{
+  border-color:rgba(167,139,250,0.5);
+  box-shadow:
+    0 0 0 4px rgba(139,92,246,0.14),
+    0 10px 25px rgba(139,92,246,0.08);
+}
+
+/* PRIMARY BUTTONS */
+.btn-primary,
+.btn-up,
+#prev-dl{
+  background:
+    linear-gradient(135deg, #a78bfa 0%, #8b5cf6 45%, #6d28d9 100%);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.14);
+  box-shadow:
+    0 14px 30px rgba(139,92,246,0.34),
+    inset 0 1px 0 rgba(255,255,255,0.28);
+}
+
+.btn-primary:hover,
+.btn-up:hover,
+#prev-dl:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 18px 38px rgba(139,92,246,0.42),
+    0 0 24px rgba(139,92,246,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.32);
+}
+
+/* SECONDARY BUTTONS */
+.filelabel,
+.btn-sm,
+.btn-ic,
+.vbtn{
+  background:rgba(255,255,255,0.035);
+  border:1px solid rgba(255,255,255,0.08);
+  color:#ecebff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.filelabel:hover,
+.filelabel.has,
+.btn-sm:hover,
+.btn-ic:hover,
+.vbtn:hover,
+.vbtn.active{
+  border-color:rgba(167,139,250,0.34);
+  color:#fff;
+  background:
+    linear-gradient(135deg, rgba(139,92,246,0.18), rgba(255,255,255,0.035));
+  box-shadow:
+    0 8px 24px rgba(139,92,246,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.btn-sm.primary,
+.btn-ic.primary{
+  border-color:rgba(167,139,250,0.24);
+  background:linear-gradient(135deg, rgba(139,92,246,0.16), rgba(255,255,255,0.04));
+  color:#f5f3ff;
+}
+
+.btn-sm.danger,
+.btn-ic.danger{
+  border-color:rgba(255,107,129,0.22);
+  color:#ffd5dc;
+}
+
+.btn-sm.danger:hover,
+.btn-ic.danger:hover{
+  background:linear-gradient(135deg, rgba(255,107,129,0.16), rgba(255,255,255,0.03));
+  border-color:rgba(255,107,129,0.42);
+  color:#fff;
+}
+
+/* FOLDER ACTION BAR */
+#folder-actions{
+  display:none;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin:-2px 0 18px;
+  padding:14px;
+  border-radius:16px;
+  background:
+    linear-gradient(135deg, rgba(139,92,246,0.14), rgba(255,255,255,0.02)),
+    rgba(17,20,30,0.92);
+  border:1px solid rgba(167,139,250,0.2);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+#folder-actions .btn-sm{
+  height:40px;
+  padding:0 16px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.02em;
+}
+
+/* SORT + BREADCRUMB */
+.sbtn.active{
+  background:linear-gradient(135deg, rgba(139,92,246,0.24), rgba(255,255,255,0.04));
+  border-color:rgba(167,139,250,0.42);
+  color:#fff;
+  box-shadow:0 8px 18px rgba(139,92,246,0.16);
+}
+
+.bc-item{
+  color:#ddd8ff;
+}
+
+.bc-item:hover{
+  color:#fff;
+  background:rgba(139,92,246,0.16);
+}
+
+/* FILE + FOLDER CARDS */
+.ficon-wrap,
+.fc-badge{
+  background:linear-gradient(135deg, rgba(139,92,246,0.22), rgba(255,255,255,0.05));
+  border:1px solid rgba(167,139,250,0.2);
+  box-shadow:
+    0 10px 22px rgba(139,92,246,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.fc-thumb{
+  border:1px solid rgba(255,255,255,0.06);
+  box-shadow:0 12px 24px rgba(0,0,0,0.18);
+}
+
+.fc-name,
+.frow-name,
+.fname,
+.uname{
+  color:#ffffff;
+}
+
+.fc-meta,
+.frow-meta,
+.fcount,
+.urole,
+.ssub,
+.ms,
+.pns{
+  color:#9ea7ba;
+}
+
+/* PREVIEW */
+#prev-overlay{
+  background:rgba(4,5,10,0.92);
+  backdrop-filter:blur(20px);
+}
+
+.prev-inner{
+  padding:10px;
+}
+
+.prev-close{
+  background:linear-gradient(135deg, rgba(139,92,246,0.28), rgba(255,255,255,0.06));
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 10px 25px rgba(0,0,0,0.28);
+}
+
+.prev-close:hover{
+  background:linear-gradient(135deg, rgba(139,92,246,0.4), rgba(255,255,255,0.1));
+}
+
+/* TOASTS */
+.toast{
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015)),
+    #141824;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    0 18px 40px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  color:#f4f4ff;
+}
+
+.toast.success{
+  border-left:3px solid #8b5cf6;
+}
+
+.toast.error{
+  border-left:3px solid #ff6b81;
+}
+
+.toast.info{
+  border-left:3px solid #ffffff;
+}
+
+/* MOBILE */
+@media (max-width: 900px){
+  #folder-actions{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  #folder-actions .btn-sm,
+  .fc-actions .btn-ic,
+  .frow-actions .btn-sm{
+    width:100%;
+  }
+
+  .fc-actions{
+    flex-direction:column;
+  }
+
+  .fdrow{
+    flex-wrap:wrap;
+  }
+
+  .fdrow .frow-actions{
+    width:100%;
+  }
+
+  .main{
+    padding:18px 14px;
+  }
+}
+  </style>
 <div class="glow g1"></div>
 <div class="glow g2"></div>
 
