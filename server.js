@@ -146,12 +146,43 @@ app.get('/api/download/:file_id', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: 'No se pudo obtener el link' }); }
 });
 
-// NUEVA RUTA: VISTA PREVIA
+// NUEVA RUTA: VISTA PREVIA (proxy con soporte de Range para vídeo/audio)
 app.get('/api/preview/:file_id', auth, async (req, res) => {
     try {
         const file = await bot.api.getFile(req.params.file_id);
-        res.redirect(`https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`);
-    } catch (e) { res.status(404).send('No disponible'); }
+        const telegramUrl = `https://api.telegram.org/file/bot${process.env.TELEGRAM_TOKEN}/${file.file_path}`;
+
+        // Reenviar cabecera Range si el navegador la manda (necesario para vídeo)
+        const headers = {};
+        if (req.headers.range) headers['Range'] = req.headers.range;
+
+        const upstream = await fetch(telegramUrl, { headers });
+
+        // Detectar Content-Type por extensión (.mov debe ir como video/mp4 para compatibilidad)
+        const ext = path.extname(file.file_path).toLowerCase();
+        const mimeMap = {
+            '.mov': 'video/mp4', '.mp4': 'video/mp4', '.webm': 'video/webm',
+            '.avi': 'video/x-msvideo', '.mkv': 'video/x-matroska',
+            '.mp3': 'audio/mpeg', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.m4a': 'audio/mp4',
+            '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+            '.gif': 'image/gif', '.webp': 'image/webp', '.pdf': 'application/pdf',
+        };
+        const contentType = mimeMap[ext] || upstream.headers.get('content-type') || 'application/octet-stream';
+
+        res.status(upstream.status);
+        res.set('Content-Type', contentType);
+        res.set('Accept-Ranges', 'bytes');
+        const contentLength = upstream.headers.get('content-length');
+        if (contentLength) res.set('Content-Length', contentLength);
+        const contentRange = upstream.headers.get('content-range');
+        if (contentRange) res.set('Content-Range', contentRange);
+
+        // Pipe del stream directo al cliente
+        upstream.body.pipe(res);
+    } catch (e) {
+        console.error(e);
+        res.status(404).send('No disponible');
+    }
 });
 
 // ... el resto del código arriba igual ...
