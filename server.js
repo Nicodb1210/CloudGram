@@ -42,19 +42,18 @@ app.use(helmet());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// ─────────────────────────────────────────
-// CONFIGURACIÓN DE SESIÓN (CORREGIDA)
-// ─────────────────────────────────────────
+app.set('trust proxy', 1); // Asegúrate de que esta línea esté antes de la sesión
+
 app.use(session({
     name: 'cloudgram.sid',
     secret: process.env.SESSION_SECRET,
     resave: true,
     saveUninitialized: true,
-    proxy: true,
+    proxy: true, // Esto es clave en Render
     cookie: {
         httpOnly: true,
         secure: true, 
-        sameSite: 'none',
+        sameSite: 'none', // Cambiado para que funcione a través del dominio de Render
         maxAge: 8 * 60 * 60 * 1000
     }
 }));
